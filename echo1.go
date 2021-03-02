@@ -19,7 +19,7 @@ func main()  {
 		s+=sep+value
 		sep=" "
 	}
-	fmt.Println("3:"+s)
+	fmt.Println("31:"+s)
 
 	fmt.Println(os.Args[1:])
 }
