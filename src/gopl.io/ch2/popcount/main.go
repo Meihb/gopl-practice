@@ -7,6 +7,11 @@
 //!+
 package popcount
 
+import (
+	"log"
+	"os"
+)
+
 // pc[i] is the population count of i.
 var pc [256]byte
 
@@ -29,3 +34,12 @@ func PopCount(x uint64) int {
 }
 
 //!-
+var cwd string
+
+func init() {
+	var err error
+	cwd, err = os.Getwd()//如果用简短申明,有可能因为err错误导致cwd一直未能初始化
+	if err != nil {
+		log.Fatalf("os.Getwd failed: %v", err)
+	}
+}
