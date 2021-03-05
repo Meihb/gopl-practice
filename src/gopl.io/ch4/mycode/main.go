@@ -2,7 +2,9 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 )
 
@@ -151,6 +153,94 @@ func main() {
 	/*
 	   struct
 	*/
+
+	type tree struct {
+		value       int
+		left, right *tree
+	}
+	type pstruct struct {
+		value int //如果是未暴露的package的struct的属性,想通过字面值这样初始化未导出的成员,会发生编译错误
+		age   int
+		name  string
+	}
+	p1 := pstruct{
+		name: "p1Name",
+	}
+	p2 := pstruct{1, 2, "p2Name"}
+	fmt.Println(p1, p2)
+
+	/*
+	   结构体嵌入和匿名成员
+	*/
+	type Point struct {
+		X, Y int
+	}
+
+	type Circle struct {
+		Center Point
+		Radius int
+		Point  //只申明一个成员的数据类型而非成员名字,这类成员就是匿名成员
+	}
+
+	type Wheel struct {
+		Circle2 Circle
+		Spokes  int
+		Circle  //匿名成员
+	}
+	var w Wheel
+	fmt.Printf("%t %p \n", &w == nil, &w)
+	w.Circle2.Center.X = 8
+	w.Circle2.Center.Y = 8
+	w.Circle2.Radius = 5
+	w.Circle2.X = 28
+	w.Circle2.Y = 28
+	w.Spokes = 20
+
+	w.X = 18      // equivalent to w.Circle.Point.X = 18 只有匿名成员才可以省略路径
+	w.Y = 18      // equivalent to w.Circle.Point.Y = 18 匿名成员并不无法访问,其名和其数据类型一直
+	w.Radius = 15 // equivalent to w.Circle.Radius = 15
+	/*
+	   想知道如果有两个匿名成员这个省略路径是如何匹配的
+	   从实验来看,如果使用了省略路径,会优先匹配匿名变量,i.e.,只要没指定成员名,就优先匹配匿名成员 这当然也很正常,如果你要指定Circle2.Center.X,你就老老实实写全路径呀
+	*/
+	fmt.Printf("%#v \n", w) //{{{8 8} 5 {28 28}} 20 {{0 0} 15 {18 18}}}
+
+	/*
+	   json
+	*/
+	type Movie struct {
+		Title  string
+		Year   int  `json:"released"`
+		Color  bool `json:"color,omitempty"` //omitempty(omit忽略) 为空时不出现
+		Actors []string
+	}
+
+	var movies = []Movie{
+		{Title: "Casablanca", Year: 1942, Color: false,
+			Actors: []string{"Humphrey Bogart", "Ingrid Bergman"}},
+		{Title: "Cool Hand Luke", Year: 1967, Color: true,
+			Actors: []string{"Paul Newman"}},
+		{Title: "Bullitt", Year: 1968, Color: true,
+			Actors: []string{"Steve McQueen", "Jacqueline Bisset"}},
+	}
+
+	data, err := json.Marshal(movies)
+	if err != nil {
+		log.Fatalf("JSON marshaling failed: %s", err)
+	}
+	fmt.Printf("%s\n", data)
+
+	data, err = json.MarshalIndent(movies, "", "    ") //前缀和缩进
+	if err != nil {
+		log.Fatalf("JSON marshaling failed: %s", err)
+	}
+	fmt.Printf("%s\n", data) //只有导出的结构体成员才会被编码，这也就是我们为什么选择用大写字母开头的成员名称。
+
+	var titles []struct{ released int } //嘿,用released还不行
+	if err := json.Unmarshal(data, &titles); err != nil {
+		log.Fatalf("JSON unmarshaling failed: %s", err)
+	}
+	fmt.Println(titles) // "[{Casablanca} {Cool Hand Luke} {Bullitt}]"
 }
 
 func zero(ptr *[4]int) *[4]int {
