@@ -236,7 +236,8 @@ func main() {
 	}
 	fmt.Printf("%s\n", data) //只有导出的结构体成员才会被编码，这也就是我们为什么选择用大写字母开头的成员名称。
 
-	var titles []struct{ released int } //嘿,用released还不行
+	// var titles []struct{ released int } //嘿,用released还不行  别名不可以 [{0} {0} {0}] 但是至少保存了结构,这一点相对优秀
+	var titles []struct{ Title string } //  "[{Casablanca} {Cool Hand Luke} {Bullitt}]" 貌似是匹配名称来着,并且显示的虽然是别名,但是匹配的是原名
 	if err := json.Unmarshal(data, &titles); err != nil {
 		log.Fatalf("JSON unmarshaling failed: %s", err)
 	}
