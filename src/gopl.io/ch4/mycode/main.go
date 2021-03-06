@@ -242,6 +242,8 @@ func main() {
 		log.Fatalf("JSON unmarshaling failed: %s", err)
 	}
 	fmt.Println(titles) // "[{Casablanca} {Cool Hand Luke} {Bullitt}]"
+
+
 }
 
 func zero(ptr *[4]int) *[4]int {
