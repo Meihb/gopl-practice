@@ -14,6 +14,9 @@ import (
 //!+main
 func bigSlowOperation() {
 	defer trace("bigSlowOperation")() // don't forget the extra parentheses
+	//这个使用好妙呀,如果不加上(),那么开始时间记录将发生在结束时,而结束时间记录将永远不会成功
+	//岂不是意味着 defer 后面加表达式其实是会执行的,有且只有遇到func类型才会延后处理
+	//非也,defer本来后面跟的就不是func而是func()
 	// ...lots of work...
 	time.Sleep(10 * time.Second) // simulate slow operation by sleeping
 }
