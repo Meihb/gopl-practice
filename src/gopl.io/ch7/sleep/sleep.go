@@ -16,7 +16,10 @@ import (
 var period = flag.Duration("period", 1*time.Second, "sleep period")
 
 func main() {
+	fmt.Println("enter")
 	flag.Parse()
+	fmt.Println("after parse")
+	fmt.Println(period)
 	fmt.Printf("Sleeping for %v...", *period)
 	time.Sleep(*period)
 	fmt.Println()
