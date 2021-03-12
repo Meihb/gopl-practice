@@ -54,7 +54,7 @@ func main() {
 	*/
 
 	os.Stdout.Write([]byte("hello")) // OK: *os.File has Write method
-	os.Stdout.Close()                // OK: *os.File has Close method
+	// os.Stdout.Close()                // OK: *os.File has Close method
 
 	var w io.Writer
 	w = os.Stdout
@@ -80,4 +80,64 @@ func main() {
 		这种方式会特别有用。当然也确实没有必要在具体的类型中指出这些共性。
 		这一段话很有意思,确实其他语言的接口和Go的接口差别较大
 	*/
+
+	/*
+		接口值 由两个部分组成,具体的类型和类型值,即动态类型和动态值
+		接口值也会被零值化, 其type和value 都是nil
+	*/
+	var w1 io.Writer
+	fmt.Println("w1", w1 == nil) //true
+	// w1.Write([]byte("hello")) // panic: nil pointer dereference    panic: nil pointer dereference 零值化的接口是不能直接调用方法的,但是编译期不会报错,而是运行时报错
+
+	//赋值动态类型
+	w1 = os.Stdout //此时,w1.type=*os.File,w1.value 是os.Stdout的拷贝
+
+	/*口类型是非常与众不同的。其它类型要么是安全的可比较类型（如基本类型和指针）要么是完全不可比较的类型（如切片，映射类型，和函数），
+	但是在比较接口值或者包含了接口值的聚合类型时，我们必须要意识到潜在的panic。同样的风险也存在于使用接口作为map的键或者switch的操作数。
+	只能比较你非常确定它们的动态值是可比较类型的接口值。
+	*/
+	var w3 io.Writer
+	fmt.Printf("%T\n", w3) // "<nil>"
+	w3 = os.Stdout
+	fmt.Printf("%T\n", w3) // "*os.File"
+	w3 = new(bytes.Buffer)
+	fmt.Printf("%T\n", w3) // "*bytes.Buffer"
+
+	/*
+		这个sort.Interface 接口有意思啊,尤其
+		package sort
+
+		type reverse struct{ Interface } // that is, sort.Interface
+
+		func (r reverse) Less(i, j int) bool { return r.Interface.Less(j, i) }
+
+		func Reverse(data Interface) Interface { return reverse{data} }
+
+		func Sort(data Interface) {n := data.Len()	quickSort(data, 0, n, maxDepth(n))}
+		这个就是 override重写吧 见下面 ti interface
+		感觉更像是继承呀
+		妙呀妙呀
+	*/
+
+	d1 := data1{}
+	fmt.Println((ti(d1).string1(2, 3))) // string x is 2,y is 3
+	fmt.Printf("%T\n", tiPrime{ti(d1)})
+	fmt.Println(tiPrime{ti(d1)}.string1(2, 3)) //string x is 3,y is 2
+}
+
+//定义一个ti接口
+type ti interface {
+	string1(x, y int) string //创建一个输出x,y的的接口规范‘
+}
+type tiPrime struct {
+	ti //我们创建一个内嵌ti接口的结构
+}
+type data1 struct{}
+
+func (tiPrime tiPrime) string1(x, y int) string {
+	return tiPrime.ti.string1(y, x)
+}
+
+func (data1 data1) string1(x, y int) string {
+	return fmt.Sprintf(" string x is %v,y is %v", x, y)
 }
