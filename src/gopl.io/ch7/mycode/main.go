@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
+	"syscall"
 )
 
 type iniSet struct {
@@ -123,6 +126,62 @@ func main() {
 	fmt.Println((ti(d1).string1(2, 3))) // string x is 2,y is 3
 	fmt.Printf("%T\n", tiPrime{ti(d1)})
 	fmt.Println(tiPrime{ti(d1)}.string1(2, 3)) //string x is 3,y is 2
+
+	/*
+		类型断言 alert?
+		对于x.(T),我们称之为断言类型
+		x是一个接口类型
+		f,ok:=x.(T)
+		如果T是一个具体类型,则断言检查x的动态类型是否和T相同,如果是,f是x的动态值,当然类型是T，两者相同嘛;如果不是,panic或者false(f为零值)
+		如果T是一个接口类型,则断言检查x的动态类型是否满足T接口,如果是,动态值没有获取到；这个结果仍然是一个有相同动态类型和值部分的接口值，
+		但是结果为类型T(把x本来暴露的method改成T可以暴露的method);如果不是和第一条一样
+
+		所以我的结论就是,断言 无论T是具体类型还是接口类型,如果成功,返回的依然是自己本身,只是在编译期可能改变了method set,如果失败,
+		返回的动态类型值将会是具体类型(具体类型情况)或者nil(接口类型),动态值都是nil
+
+		感觉可以理解,接口类型这玩意好像是compile独有的,runtime还在乎个屁啊
+		另外有一个关键的点,如果判断成功的话,返回值是指向同一个地址的,这点非常棒？存疑,也可能因为我的测试数据是pointer类型才如此
+	*/
+
+	var w4 io.Writer
+	fmt.Printf("w4 :%T %[1]v  \n", w4) //nil nil 符合预期,这是一个动态类型和接口值都为nil的零值,但是runtime其实并没有记录w4是个Writer接口,所以接口判断是编译期行为的吧
+	w4 = os.Stdout
+	fmt.Printf("w4 :%T %[1]v  \n", w4)  //*os.File &{0xc0000da280} 所以其实并没有记录io.Writer的字段,毕竟interface只包含一个动态类型和接口值,好呀,原来只是编译期语法判断行为
+	f, ok := w4.(*os.File)              // success: f == os.Stdout
+	fmt.Printf("%T %[1]v %v \n", f, ok) //*os.File &{0xc0000da280} true
+	c, ok := w4.(*bytes.Buffer)         // panic: interface holds *os.File, not *bytes.Buffer
+	fmt.Printf("%T %[1]v %v \n", c, ok) //*bytes.Buffer <nil> false 对于具体类型的断言,失败后动态类型是T,而接口值是nil
+
+	// w4.Read() 接口未暴露
+	rw, ok := w4.(io.ReadWriter)         // success: *os.File has both Read and Write
+	fmt.Printf("%T %[1]v %v \n", rw, ok) //*os.File &{0xc0000da280} true 动态类型没有发生变化诶,奇怪奇怪
+	p1 := []byte{1, 2}
+	rw.Read(p1)
+	rw2, ok := w4.(ti)
+	fmt.Printf("%T %[1]v %v \n", rw2, ok) //nil nil false
+	rw3, ok := w4.(flag.Getter)
+	fmt.Printf("rw3 :%T %[1]v %v \n", rw3, ok) //nil nil false 果然,对于接口类型情况而言,失败后类型是nil,接口值也是nil
+
+	var ErrNotExist = errors.New("file does not exist")
+
+	// IsNotExist returns a boolean indicating whether the error is known to
+	// report that a file or directory does not exist. It is satisfied by
+	// ErrNotExist as well as some syscall errors.
+	isNotExist := func(err error) bool {
+		pe, ok := err.(*os.PathError)     //这是具体类型而非接口类型,知道了吧
+		fmt.Printf("pe :%T %[1]v \n", pe) //果不其然,返回的是 *fs.PathError nil
+		if ok {
+			err = pe.Err
+			fmt.Println("error:", err)
+		}
+		return err == syscall.ENOENT || err == ErrNotExist
+	}
+	// _, err := os.Open("/file")
+	_, err := os.Hostname()
+	fmt.Println("end:", isNotExist(err)) // "true"
+
+	myBytes := []byte("newsd美") //什么呀,这是类型转换,你以为是字面值的第二种写法呢
+	fmt.Println(myBytes)
 }
 
 //定义一个ti接口

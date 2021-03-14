@@ -11,18 +11,23 @@ import (
 	"math"
 )
 
-//!+env
+//这就是go语言 工厂模式的实现吗?
 
+
+
+//!+env
+//Env 映射表
 type Env map[Var]float64
 
 //!-env
 
 //!+Eval1
 
+//Eval Var 返回其map值或零值
 func (v Var) Eval(env Env) float64 {
 	return env[v]
 }
-
+//Eval literal 返回浮点数
 func (l literal) Eval(_ Env) float64 {
 	return float64(l)
 }
@@ -30,7 +35,7 @@ func (l literal) Eval(_ Env) float64 {
 //!-Eval1
 
 //!+Eval2
-
+//Eval unary 单操作数运算,
 func (u unary) Eval(env Env) float64 {
 	switch u.op {
 	case '+':
@@ -40,7 +45,7 @@ func (u unary) Eval(env Env) float64 {
 	}
 	panic(fmt.Sprintf("unsupported unary operator: %q", u.op))
 }
-
+//双操作数运算
 func (b binary) Eval(env Env) float64 {
 	switch b.op {
 	case '+':

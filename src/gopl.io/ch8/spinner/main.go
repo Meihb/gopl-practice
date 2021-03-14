@@ -15,8 +15,8 @@ import (
 func main() {
 	go spinner(100 * time.Millisecond)
 	const n = 45
-	fibN := fib(n) // slow
-	fmt.Printf("\rFibonacci(%d) = %d\n", n, fibN)
+	fibN := fib(n)                                // slow
+	fmt.Printf("\rFibonacci(%d) = %d\n", n, fibN) //一旦main goroutine return ,则所有的goroutine都会结束
 }
 
 func spinner(delay time.Duration) {
