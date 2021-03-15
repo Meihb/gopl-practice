@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	listener, err := net.Listen("tcp", "localhost:8000")
+	listener, err := net.Listen("tcp", "localhost:8801")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -25,14 +25,14 @@ func main() {
 			log.Print(err) // e.g., connection aborted
 			continue
 		}
-		handleConn(conn) // handle one connection at a time
+		go handleConn(conn) // handle one connection at a time
 	}
 }
 
 func handleConn(c net.Conn) {
 	defer c.Close()
 	for {
-		_, err := io.WriteString(c, time.Now().Format("15:04:05\n"))
+		_, err := io.WriteString(c, time.Now().Format("15:04:05\t\r\n"))
 		if err != nil {
 			return // e.g., client disconnected
 		}
