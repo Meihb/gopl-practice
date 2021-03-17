@@ -14,10 +14,14 @@ import (
 //!+
 func main() {
 	fmt.Println("Commencing countdown.")
-	tick := time.Tick(1 * time.Second)
+	tick := time.Tick(1 * time.Second) // <-chan time.Time
+	// for r := range tick {
+	// 	fmt.Println(r)
+	// }//看起来是个自维护的<-chan
 	for countdown := 10; countdown > 0; countdown-- {
 		fmt.Println(countdown)
-		<-tick
+		r := <-tick
+		fmt.Println(r)
 	}
 	launch()
 }

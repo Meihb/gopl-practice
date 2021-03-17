@@ -2,12 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"sync"
 	"time"
-
-	"gopl.io/ch8/thumbnail"
 )
 
 func main() {
@@ -88,35 +83,48 @@ func main() {
 
 	*/
 
-	makeThumbnails6 := func(filenames <-chan string) int64 {
-		sizes := make(chan int64)
-		var wg sync.WaitGroup // number of working goroutines
-		for f := range filenames {
-			wg.Add(1)
-			// worker
-			go func(f string) {
-				defer wg.Done()
-				thumb, err := thumbnail.ImageFile(f)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				info, _ := os.Stat(thumb) // OK to ignore error
-				sizes <- info.Size()
-			}(f)
-		}
+	// makeThumbnails6 := func(filenames <-chan string) int64 {
+	// 	sizes := make(chan int64)
+	// 	var wg sync.WaitGroup // number of working goroutines
+	// 	for f := range filenames {
+	// 		wg.Add(1)
+	// 		// worker
+	// 		go func(f string) {
+	// 			defer wg.Done()
+	// 			thumb, err := thumbnail.ImageFile(f)
+	// 			if err != nil {
+	// 				log.Println(err)
+	// 				return
+	// 			}
+	// 			info, _ := os.Stat(thumb) // OK to ignore error
+	// 			sizes <- info.Size()
+	// 		}(f)
+	// 	}
 
-		// closer
-		go func() {
-			wg.Wait()
-			close(sizes)
-		}()
+	// 	// closer
+	// 	go func() {
+	// 		wg.Wait()
+	// 		close(sizes)
+	// 	}()
 
-		var total int64
-		for size := range sizes {
-			total += size
+	// 	var total int64
+	// 	for size := range sizes {
+	// 		total += size
+	// 	}
+	// 	return total
+	// }
+	// fmt.Printf("%T", makeThumbnails6)
+
+	/*
+		这个多路复用,感觉就是 for switch 的写法呀,区别是 case 代表一个通信操作,在某个channel 上进行发送或者接受
+	*/
+	ch := make(chan int, 1)
+	for i := 0; i < 10; i++ {
+		select {
+		case x := <-ch:
+			fmt.Println(x) // "0" "2" "4" "6" "8"
+		case ch <- i:
 		}
-		return total
 	}
-	fmt.Printf("%T", makeThumbnails6)
+
 }

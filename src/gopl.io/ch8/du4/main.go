@@ -120,7 +120,7 @@ var sema = make(chan struct{}, 20) // concurrency-limiting counting semaphore
 //!+5
 func dirents(dir string) []os.FileInfo {
 	select {
-	case sema <- struct{}{}: // acquire token
+	case sema <- struct{}{}: // acquire token 原来是写入啊
 	case <-done:
 		return nil // cancelled
 	}

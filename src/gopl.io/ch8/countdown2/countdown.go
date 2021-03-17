@@ -19,6 +19,7 @@ func main() {
 
 	//!-
 
+
 	//!+abort
 	abort := make(chan struct{})
 	go func() {
@@ -29,12 +30,16 @@ func main() {
 
 	//!+
 	fmt.Println("Commencing countdown.  Press return to abort.")
+
 	select {
-	case <-time.After(10 * time.Second):
+	case <-time.After(10 * time.Second): //意思是10s后 从chan 中返回 一值 time.After函数会立即返回一个channel，并起一个新的goroutine在经过特定的时间后向该channel发送一个独立的值。
 		// Do nothing.
 	case <-abort:
 		fmt.Println("Launch aborted!")
 		return
+
+	default: //不再有阻塞功能
+
 	}
 	launch()
 }

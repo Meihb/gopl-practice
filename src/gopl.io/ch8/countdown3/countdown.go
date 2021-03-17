@@ -39,6 +39,7 @@ func main() {
 		case <-abort:
 			fmt.Println("Launch aborted!")
 			return
+		
 		}
 	}
 	launch()
