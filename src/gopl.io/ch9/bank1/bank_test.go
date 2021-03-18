@@ -1,13 +1,13 @@
 // Copyright © 2016 Alan A. A. Donovan & Brian W. Kernighan.
 // License: https://creativecommons.org/licenses/by-nc-sa/4.0/
 
-package bank_test
+package bank_test //切记,申明的package也是_test为后缀的
 
 import (
 	"fmt"
 	"testing"
 
-	"gopl.io/ch9/bank1"
+	bank "gopl.io/ch9/bank1"
 )
 
 func TestBank(t *testing.T) {

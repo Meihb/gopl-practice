@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	_ "image/png" // register PNG decoder
+	_ "image/png" // register PNG decoder 匿名包,一般使用其init函数和
 	"io"
 	"os"
 )
