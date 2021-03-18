@@ -37,7 +37,6 @@ func broadcaster() {
 		case cli := <-entering:
 			clients[cli] = true
 
-
 		case cli := <-leaving:
 			delete(clients, cli)
 			close(cli)
