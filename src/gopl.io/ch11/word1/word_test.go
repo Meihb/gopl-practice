@@ -4,9 +4,14 @@
 //!+test
 package word
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestPalindrome(t *testing.T) {
+
+	fmt.Println("start")
 	if !IsPalindrome("detartrated") {
 		t.Error(`IsPalindrome("detartrated") = false`)
 	}
@@ -27,7 +32,7 @@ func TestNonPalindrome(t *testing.T) {
 // See package gopl.io/ch11/word2 for the fix.
 
 //!+more
-func TestFrenchPalindrome(t *testing.T) {
+func TestFrenchPalindrome(b *testing.T) {
 	if !IsPalindrome("été") {
 		t.Error(`IsPalindrome("été") = false`)
 	}

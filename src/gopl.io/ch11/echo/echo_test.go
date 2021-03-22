@@ -24,13 +24,14 @@ func TestEcho(t *testing.T) {
 		{true, "\t", []string{"one", "two", "three"}, "one\ttwo\tthree\n"},
 		{true, ",", []string{"a", "b", "c"}, "a,b,c\n"},
 		{false, ":", []string{"1", "2", "3"}, "1:2:3"},
+		{true, ",", []string{"a", "b", "c"}, "a b c\n"}, // NOTE: wrong expectation!
 	}
 
 	for _, test := range tests {
 		descr := fmt.Sprintf("echo(%v, %q, %q)",
 			test.newline, test.sep, test.args)
 
-		out = new(bytes.Buffer) // captured output
+		out = new(bytes.Buffer) // captured output 这个out实在echo.go中定义的,package级变量
 		if err := echo(test.newline, test.sep, test.args); err != nil {
 			t.Errorf("%s failed: %v", descr, err)
 			continue
