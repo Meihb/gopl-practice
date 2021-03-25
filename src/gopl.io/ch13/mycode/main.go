@@ -58,7 +58,57 @@ func main() {
 	fmt.Printf("%#016x\n", uint(1.0))        //0x0000000000000001
 
 	/*
-		通过转为新类型指针，我们可以更新浮点数的位模式。通过位模式操作浮点数是可以的，但是更重要的意义是指针转换语法让我们可以在不破坏类型系统的前提下向内存写入任意的值。git
+		通过转为新类型指针，我们可以更新浮点数的位模式。通过位模式操作浮点数是可以的，但是更重要的意义是指针转换语法让我们可以在不破坏类型系统的前提下向内存写入任意的值。
+
+		一个unsafe.Pointer指针也可以被转化为uintptr类型，然后保存到指针型数值变量中（译注：这只是和当前指针相同的一个数字值，并不是一个指针），然后用以做必要的指针数值运算。
+		（第三章内容，uintptr是一个无符号的整型数，足以保存一个地址）这种转换虽然也是可逆的，但是将uintptr转为unsafe.Pointer指针可能会破坏类型系统，因为并不是所有的数字都
+		是有效的内存地址。
+
+		许多将unsafe.Pointer指针转为原生数字，然后再转回为unsafe.Pointer类型指针的操作也是不安全的
+		有下面示例就知道原因了,内存不是连续的,有很多空洞,所以不是所有原声数字转为Pointer的操作都是安全的这句话自然是可以理解的 NO!
+		不是这样解释的,就算使用offset函数,如果你引入了uintptr的中间变量,也可能出现安全性问题,具体原因如下,GC相关
 	*/
+	var x struct { //align 8 (64bit system)
+		a bool  //align 1 offset 0
+		b int16 //align 2 offset 2  因为他和a实在同一行机器字中,顾按照最小公倍数来计算,具体自己再去看一下网页内容
+		c []int //align 8 offset 8
+	}
+
+	// 和 pb := &x.b 等价
+	pb := (*int16)(unsafe.Pointer(
+		uintptr(unsafe.Pointer(&x)) +
+			unsafe.Offsetof(x.b)))
+	*pb = 42
+	fmt.Println(x.b) // "42"
+
+	p1 := unsafe.Pointer(&x)
+	fmt.Println(p1, unsafe.Alignof(x)) //0xc0000443e0 8
+	/*
+		uintptr 是一个足够容纳当前环境下指针长度的uint类型，但是他的类型转换是 uintptr,这就很难接受了,不是我喜欢的(uintptr)这样的强制转换
+		另外,unsafet.Pointer也是如此类型转换的,挠头
+	*/
+	fmt.Println(uintptr(p1))
+
+	// NOTE: subtly incorrect!
+	/*
+		不要试图引入一个uintptr类型的临时变量，因为它可能会破坏代码的安全性 重点！
+		微妙的错误,微妙的解释
+		产生错误的原因很微妙。有时候垃圾回收器会移动一些变量以降低内存碎片等问题。这类垃圾回收器被称为移动GC。当一个变量被移动，所有的保存该变量旧地址
+		的指针必须同时被更新为变量移动后的新地址。从垃圾收集器的视角来看，一个unsafe.Pointer是一个指向变量的指针，因此当变量被移动时对应的指针也必须
+		被更新；但是uintptr类型的临时变量只是一个普通的数字，所以其值不应该被改变。上面错误的代码因为引入一个非指针的临时变量tmp，导致垃圾收集器无法
+		正确识别这个是一个指向变量x的指针。当第二个语句执行时，变量x可能已经被转移，这时候临时变量tmp也就不再是现在的&x.b地址。第三个向之前无效地址空
+		间的赋值语句将彻底摧毁整个程序
+
+		另有一些错误
+		pT := uintptr(unsafe.Pointer(new(T)))
+		很明显,new(T)并没有赋值给一个变量来应用此地址,如此GC将会回收该内存空间,那么pt将会是无效的地址
+
+		因此目前的指导原则是,原子性! 将涉及到uintptr和unsafe.Pointer的互相转换尽可能减少并放在同一个表达式中
+
+	*/
+	tmp := uintptr(unsafe.Pointer(&x)) + unsafe.Offsetof(x.b)
+	pb2 := (*int16)(unsafe.Pointer(tmp))
+	*pb2 = 42
+	fmt.Println(x.b) // "42"
 
 }
