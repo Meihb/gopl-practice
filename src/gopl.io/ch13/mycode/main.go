@@ -86,6 +86,7 @@ func main() {
 	/*
 		uintptr 是一个足够容纳当前环境下指针长度的uint类型，但是他的类型转换是 uintptr,这就很难接受了,不是我喜欢的(uintptr)这样的强制转换
 		另外,unsafet.Pointer也是如此类型转换的,挠头
+		你说尼玛呢,go的类型转换本就是如此  type(v)
 	*/
 	fmt.Println(uintptr(p1))
 
