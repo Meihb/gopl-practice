@@ -28,8 +28,10 @@ func main() {
 	// false
 	// [32]uint8
 
-	/*在函数传参处理中,大多数其他语言据我所知都是把array做引用传值对象的,但是go中相对应的概念是slice切片,array是普通数据格式,是copy处理的
-	  感觉他们有种老学究式的坚守呀,虽知道且承认变长的slice更加风靡,却硬是照本宣科造出来个注定不会被大量食用的原教旨array出来,哈哈
+	/*
+			ayyay 是值类型,slice 是引用类型(chan,map)
+		  	在函数传参处理中,大多数其他语言据我所知都是把array做引用传值对象的(????谁写的),但是go中相对应的概念是slice切片,array是普通数据格式,是copy处理的
+		  	感觉他们有种老学究式的坚守呀,虽知道且承认变长的slice更加风靡,却硬是照本宣科造出来个注定不会被大量食用的原教旨array出来,哈哈
 	*/
 	a3 := [4]int{1, 2, 3, 4}
 	fmt.Printf("%T\n", &a3)
@@ -38,11 +40,14 @@ func main() {
 	fmt.Printf("%v %v %v\n", a3, a4, a5)
 
 	/*
-					   slcie是由三个部分组成,hashtable都一样吧,不对,就是数组,不是hasntable,指针(ptr),长度(len),容量(capacity)
-				      ptr指向slice第一个元素对应的底层数组的地址,却不一定是数组的第一个元素
+		仅仅申明slice是不会分配内存的,零值化为nil,分配了内存但是无元素的slice!=nil
+		slcie是由三个部分组成,hashtable都一样吧,不对,就是数组,不是hashtable,指针(ptr),长度(len),容量(capacity)
+		ptr指向slice第一个元素对应的底层数组的地址,却不一定是底层数组的第一个元素
 
-		            slice概念上类似php的数组,但是还记得他们的key固定从0开始对吧,那就是说如果你如下months定义一个切片从key=1开始,key=0处会被零值化
-		            所以len=cap=13 记住这一点
+		slice概念上类似php的数组,但是还记得他们的key固定从0开始对吧,那就是说如果你如下months定义一个切片从key=1开始,key=0处会被零值化
+		所以len=cap=13 记住这一点
+
+		另外,切片操作赋值给新变量,看起来是引用到被切片操作的那一块内存中了,所以其实是对同一片内存地址的差异化引用;
 	*/
 
 	months := []string{
@@ -59,12 +64,13 @@ func main() {
 		11: "November",
 		12: "December",
 	}
-	fmt.Printf("%#v %d %d\n", months, len(months), cap(months))
+	fmt.Printf("%#v %d %d\n", months, len(months), cap(months))//13 13
 	months2 := months[1:]
-	fmt.Printf("%#v %d %d\n", months2, len(months2), cap(months2))
+	fmt.Printf("%#v %d %d\n", months2, len(months2), cap(months2))//13 13
 
 	Q2 := months[4:7]
 	summer := months[6:9]
+	fmt.Printf("%#v %d %d\n", summer, len(summer), cap(summer))//3 7
 	fmt.Println(Q2)     // ["April" "May" "June"]
 	fmt.Println(summer) // ["June" "July" "August"]
 
@@ -242,7 +248,6 @@ func main() {
 		log.Fatalf("JSON unmarshaling failed: %s", err)
 	}
 	fmt.Println(titles) // "[{Casablanca} {Cool Hand Luke} {Bullitt}]"
-
 
 }
 
